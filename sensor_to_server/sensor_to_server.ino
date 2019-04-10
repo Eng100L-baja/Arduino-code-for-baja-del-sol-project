@@ -1,6 +1,8 @@
-// Include the libraries we need
+#include <SoftwareSerial.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+
+SoftwareSerial GPRS(7, 8); // RX, TX
 
 // All data wire are plugged into port 2 on the Arduino
 #define temp_sensors 2
@@ -19,28 +21,55 @@ OneWire Sajje(temp_sensors);
 // The & symbol in a C++ variable declaration means it's a reference. https://en.wikipedia.org/wiki/Reference_%28C%2B%2B%29
 DallasTemperature Dallas(&Sajje);
 
-/*
- * The setup function. We only start the sensors here
- */
-void setup(void)
-{
-  // start serial port
+void dataWrite(String toSend, int tDelay = 500){
+  GPRS.println(toSend);
+  delay(tDelay);
+  while(GPRS.available()) 
+    Serial.write(GPRS.read());
+}
+
+void setupTCP(){
+  dataWrite("AT+CREG?");
+  dataWrite("AT+CGREG?");
+  dataWrite("AT+CMEE=1");
+  dataWrite("AT+CGACT?");
+  dataWrite("AT+CIPSHUT");
+  dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
+  dataWrite("AT+CIICR",1000);
+  dataWrite("AT+CIFSR",1000);             //Get conformation of the IP address
+  Serial.println("SetupTCP Complete");
+}
+
+
+void sendData(int data){
+  dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"",5000);
+  dataWrite("AT+CIPSEND",100);
+  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + String(data) + "\",\"t\":\"data\"}",100);
+  GPRS.write(0x1a);
+  delay(1000);
+  while(GPRS.available()) 
+    Serial.write(GPRS.read());
+}
+
+void setup() {
+  GPRS.begin(19200);
   Serial.begin(19200);
-  Serial.println("Dallas Temperature IC Control Library Demo");
+  delay(1000);
+  setupTCP();
+  delay(1000);
+//  sendData(105);
+//  Serial.write("LETS GO");
 
   // Start up the Dallas library
   Dallas.begin();
+  Serial.println("Dallas Temperature Begin");
 
   // setup the pin for pump
   pinMode(relay_switch, OUTPUT);
 }
 
-/*
- * Main function, get and show the temperature
- */
-void loop(void)
-{ 
-  // call sensors.requestTemperatures() to issue a global temperature 
+void loop() {
+    // call sensors.requestTemperatures() to issue a global temperature 
   // request to all devices on the bus
   Serial.print("Requesting temperatures...");
 
@@ -68,6 +97,18 @@ void loop(void)
     Serial.println(" ");
   }
 
-  delay(2000);
-  
+  sendData(temp_in);
+  delay(10000);
+
+//  while(GPRS.available()) 
+//    Serial.write(GPRS.read());
+//  while (Serial.available()) {
+//    byte b = Serial.read();
+//    if (b == '*')
+//      GPRS.write(0x1a);
+//    else
+//      GPRS.write(b);
+//      GPRS.write(Serial.read());
+//  }
+
 }
