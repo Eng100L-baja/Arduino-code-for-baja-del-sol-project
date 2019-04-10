@@ -7,7 +7,7 @@ void dataWrite(String toSend, int tDelay = 500){
   while(GPRS.available()) 
     Serial.write(GPRS.read());
 }
-//hello
+
 void setupTCP(){
   dataWrite("AT+CREG?");
   dataWrite("AT+CGREG?");
