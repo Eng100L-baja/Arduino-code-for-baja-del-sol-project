@@ -2,13 +2,17 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
-SoftwareSerial GPRS(7, 8); // RX, TX
+SoftwareSerial SIM900(7, 8); // RX, TX
 
 // All data wire are plugged into port 2 on the Arduino
 #define temp_sensors 2
 #define relay_switch 10
 float temp_in;
 float temp_out;
+
+String t_in;
+String t_out;
+String temp_sense;
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 // call the library oneWire, provide a name to your Onewire devices (we called them "Sajjie")
@@ -22,10 +26,10 @@ OneWire Sajje(temp_sensors);
 DallasTemperature Dallas(&Sajje);
 
 void dataWrite(String toSend, int tDelay = 500){
-  GPRS.println(toSend);
+  SIM900.println(toSend);
   delay(tDelay);
-  while(GPRS.available()) 
-    Serial.write(GPRS.read());
+  while(SIM900.available()) 
+    Serial.write(SIM900.read());
 }
 
 void setupTCP(){
@@ -36,23 +40,24 @@ void setupTCP(){
   dataWrite("AT+CIPSHUT");
   dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
   dataWrite("AT+CIICR",1000);
-  dataWrite("AT+CIFSR",1000);             //Get conformation of the IP address
+  dataWrite("AT+CIFSR",1000);             //Get confirmation of the IP address
   Serial.println("SetupTCP Complete");
 }
 
 
-void sendData(int data){
+void sendData(String data){
   dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"",5000);
   dataWrite("AT+CIPSEND",100);
   dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + String(data) + "\",\"t\":\"data\"}",100);
-  GPRS.write(0x1a);
+  SIM900.write(0x1a);
   delay(1000);
-  while(GPRS.available()) 
-    Serial.write(GPRS.read());
+  while(SIM900.available()) 
+    Serial.write(SIM900.read());
 }
 
 void setup() {
-  GPRS.begin(19200);
+  SIM900.begin(19200);
+  delay(2000);
   Serial.begin(19200);
   delay(1000);
   setupTCP();
@@ -96,19 +101,22 @@ void loop() {
     digitalWrite(relay_switch,LOW);
     Serial.println(" ");
   }
-
-  sendData(temp_in);
+  t_in = String(temp_in);
+  t_out = String(temp_out);
+  temp_sense = t_in + " " + t_out;
+  Serial.println(temp_sense);
+  sendData(temp_sense);
   delay(10000);
 
-//  while(GPRS.available()) 
-//    Serial.write(GPRS.read());
+//  while(SIM900.available()) 
+//    Serial.write(SIM900.read());
 //  while (Serial.available()) {
 //    byte b = Serial.read();
 //    if (b == '*')
-//      GPRS.write(0x1a);
+//      SIM900.write(0x1a);
 //    else
-//      GPRS.write(b);
-//      GPRS.write(Serial.read());
+//      SIM900.write(b);
+//      SIM900.write(Serial.read());
 //  }
 
 }

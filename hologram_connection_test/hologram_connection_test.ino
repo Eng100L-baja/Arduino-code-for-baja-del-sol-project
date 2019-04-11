@@ -17,6 +17,7 @@ void setupTCP(){
   dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
   dataWrite("AT+CIICR",1000);
   dataWrite("AT+CIFSR",1000);             //Get conformation of the IP address
+  Serial.println("SETUPTCP COMPLETE");
 }
 
 
