@@ -14,6 +14,8 @@ String t_in;
 String t_out;
 String temp_sense;
 
+String pumpStatus;
+
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 // call the library oneWire, provide a name to your Onewire devices (we called them "Sajjie")
 // and provide the pin number of these "Sajje" devices (our pin number is temp_sensor = 2)
@@ -97,15 +99,17 @@ void loop() {
     Serial.println("turn on the pump.");
     Serial.println(" ");
     digitalWrite(relay_switch,HIGH);
+    pumpStatus = "ON";
   }
   else {
     Serial.println("turn off the pump.");
     digitalWrite(relay_switch,LOW);
     Serial.println(" ");
+    pumpStatus = "OFF";
   }
   t_in = String(temp_in);
   t_out = String(temp_out);
-  temp_sense = "Inlet Temp: "+ t_in + " / " + "Outlet Temp: " + t_out;
+  temp_sense = "Inlet Temp: "+ t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
   Serial.println(temp_sense);
   sendData(temp_sense);
   delay(5000);
