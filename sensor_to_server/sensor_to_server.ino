@@ -88,6 +88,13 @@ void loop() {
   // We use the function ByIndex
   temp_in = Dallas.getTempCByIndex(0);
   temp_out = Dallas.getTempCByIndex(1);
+  Serial.print("temp_in: ");
+  Serial.print(temp_in);
+  Serial.print("/ temp_out: ");
+  Serial.println(temp_out);
+  
+  temp_in = (temp_in * (1.8)) + 32; //converts Celsius to Fahrenheit 
+  temp_out = (temp_out * (1.8)) + 32;
   
   // After we got the temperatures, we can print them here.
   Serial.print("Temperature for water inlet is: ");
