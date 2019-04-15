@@ -46,9 +46,11 @@ void setupTCP(){
 
 
 void sendData(String data){
+  String message;
+  message = data;
   dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"",5000);
   dataWrite("AT+CIPSEND",100);
-  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + String(data) + "\",\"t\":\"data\"}",100);
+  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + message + "\",\"t\":\"data\"}",100);
   SIM900.write(0x1a);
   delay(1000);
   while(SIM900.available()) 
@@ -59,7 +61,7 @@ void setup() {
   SIM900.begin(19200);
   delay(2000);
   Serial.begin(19200);
-  delay(1000);
+  delay(2000);
   setupTCP();
   delay(1000);
 //  sendData(105);
@@ -103,10 +105,10 @@ void loop() {
   }
   t_in = String(temp_in);
   t_out = String(temp_out);
-  temp_sense = t_in + " " + t_out;
+  temp_sense = "Inlet Temp: "+ t_in + " / " + "Outlet Temp: " + t_out;
   Serial.println(temp_sense);
   sendData(temp_sense);
-  delay(10000);
+  delay(5000);
 
 //  while(SIM900.available()) 
 //    Serial.write(SIM900.read());
