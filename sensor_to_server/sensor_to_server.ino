@@ -16,47 +16,57 @@ String temp_sense;
 
 String pumpStatus;
 
+
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 // call the library oneWire, provide a name to your Onewire devices (we called them "Sajjie")
 // and provide the pin number of these "Sajje" devices (our pin number is temp_sensor = 2)
 OneWire Sajje(temp_sensors);
 
-// Pass our oneWire reference to Dallas Temperature. 
+// Pass our oneWire reference to Dallas Temperature.
 // call the library oneWire, name your Dallas library (we called them "Dallas")
 // and provide the "Sajje" devices reference to Dallas
 // The & symbol in a C++ variable declaration means it's a reference. https://en.wikipedia.org/wiki/Reference_%28C%2B%2B%29
 DallasTemperature Dallas(&Sajje);
 
-void dataWrite(String toSend, int tDelay = 500){
+void dataWrite(String toSend, int tDelay = 500) {
   SIM900.println(toSend);
   delay(tDelay);
-  while(SIM900.available()) 
+  while (SIM900.available())
     Serial.write(SIM900.read());
 }
 
-void setupTCP(){
+void setupTCP() {
   dataWrite("AT+CREG?");
   dataWrite("AT+CGREG?");
   dataWrite("AT+CMEE=1");
   dataWrite("AT+CGACT?");
   dataWrite("AT+CIPSHUT");
   dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
-  dataWrite("AT+CIICR",1000);
-  dataWrite("AT+CIFSR",1000);             //Get confirmation of the IP address
+  dataWrite("AT+CIICR", 1000);
+  dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
   Serial.println("SetupTCP Complete");
 }
 
 
-void sendData(String data){
+void sendData(String data) {
   String message;
   message = data;
-  dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"",5000);
-  dataWrite("AT+CIPSEND",100);
-  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + message + "\",\"t\":\"data\"}",100);
+  dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"", 5000);
+  dataWrite("AT+CIPSEND", 100);
+  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + message + "\",\"t\":\"data\"}", 100);
   SIM900.write(0x1a);
   delay(1000);
-  while(SIM900.available()) 
+  while (SIM900.available())
     Serial.write(SIM900.read());
+}
+
+void getTime(){ 
+  dataWrite("AT+HTTPINIT");
+  dataWrite("AT+HTTPPARA="CID",1");
+  dataWrite("AT+HTTPPARA="URL","http://worldtimeapi.org/api/timezone/America/Los_Angeles");
+  dataWrite("AT+HTTPACTION=0");
+  dataWrite("AT+HTTPREAD");
+  
 }
 
 void setup() {
@@ -66,8 +76,8 @@ void setup() {
   delay(2000);
   setupTCP();
   delay(1000);
-//  sendData(105);
-//  Serial.write("LETS GO");
+  //  sendData(105);
+  //  Serial.write("LETS GO");
 
   // Start up the Dallas library
   Dallas.begin();
@@ -78,7 +88,7 @@ void setup() {
 }
 
 void loop() {
-    // call sensors.requestTemperatures() to issue a global temperature 
+  // call sensors.requestTemperatures() to issue a global temperature
   // request to all devices on the bus
   Serial.print("Requesting temperatures...");
 
@@ -92,44 +102,44 @@ void loop() {
   Serial.print(temp_in);
   Serial.print("/ temp_out: ");
   Serial.println(temp_out);
-  
-  temp_in = (temp_in * (1.8)) + 32; //converts Celsius to Fahrenheit 
+
+  temp_in = (temp_in * (1.8)) + 32; //converts Celsius to Fahrenheit
   temp_out = (temp_out * (1.8)) + 32;
-  
+
   // After we got the temperatures, we can print them here.
   Serial.print("Temperature for water inlet is: ");
-  Serial.println(temp_in);  
+  Serial.println(temp_in);
   Serial.print("Temperature for water outlet is: ");
   Serial.println(temp_out);
 
-  if (temp_out - temp_in > 0){
+  if (temp_out - temp_in > 0) {
     Serial.println("turn on the pump.");
     Serial.println(" ");
-    digitalWrite(relay_switch,HIGH);
+    digitalWrite(relay_switch, HIGH);
     pumpStatus = "ON";
   }
   else {
     Serial.println("turn off the pump.");
-    digitalWrite(relay_switch,LOW);
+    digitalWrite(relay_switch, LOW);
     Serial.println(" ");
     pumpStatus = "OFF";
   }
   t_in = String(temp_in);
   t_out = String(temp_out);
-  temp_sense = "Inlet Temp: "+ t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
+  temp_sense = "Inlet Temp: " + t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
   Serial.println(temp_sense);
   sendData(temp_sense);
   delay(5000);
 
-//  while(SIM900.available()) 
-//    Serial.write(SIM900.read());
-//  while (Serial.available()) {
-//    byte b = Serial.read();
-//    if (b == '*')
-//      SIM900.write(0x1a);
-//    else
-//      SIM900.write(b);
-//      SIM900.write(Serial.read());
-//  }
+  //  while(SIM900.available())
+  //    Serial.write(SIM900.read());
+  //  while (Serial.available()) {
+  //    byte b = Serial.read();
+  //    if (b == '*')
+  //      SIM900.write(0x1a);
+  //    else
+  //      SIM900.write(b);
+  //      SIM900.write(Serial.read());
+  //  }
 
 }
