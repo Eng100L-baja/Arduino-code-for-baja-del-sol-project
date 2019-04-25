@@ -60,14 +60,14 @@ void sendData(String data) {
     Serial.write(SIM900.read());
 }
 
-void getTime(){ 
-  dataWrite("AT+HTTPINIT");
-  dataWrite("AT+HTTPPARA="CID",1");
-  dataWrite("AT+HTTPPARA="URL","http://worldtimeapi.org/api/timezone/America/Los_Angeles");
-  dataWrite("AT+HTTPACTION=0");
-  dataWrite("AT+HTTPREAD");
-  
-}
+//void getTime(){ 
+//  dataWrite("AT+HTTPINIT");
+//  dataWrite("AT+HTTPPARA="CID",1");
+//  dataWrite("AT+HTTPPARA="URL","http://worldtimeapi.org/api/timezone/America/Los_Angeles");
+//  dataWrite("AT+HTTPACTION=0");
+//  dataWrite("AT+HTTPREAD");
+//  
+//}
 
 void setup() {
   SIM900.begin(19200);
