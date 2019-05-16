@@ -51,6 +51,11 @@ void setupTCP() {
     dataWrite("AT+CIICR", 1000);
     dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
 
+    if(Serial.available()){
+      // read the incoming address
+      Address = Serial.read();
+    }
+    
     if(SIM900.available()){
       // read the incoming address
       Address = SIM900.read();
