@@ -16,6 +16,10 @@ String temp_sense;
 
 String pumpStatus;
 
+int check = 0;
+String Address;
+String IP = "10.59.8.243";
+
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 // call the library oneWire, provide a name to your Onewire devices (we called them "Sajjie")
@@ -36,15 +40,30 @@ void dataWrite(String toSend, int tDelay = 500) {
 }
 
 void setupTCP() {
-  dataWrite("AT+CREG?");
-  dataWrite("AT+CGREG?");
-  dataWrite("AT+CMEE=1");
-  dataWrite("AT+CGACT?");
-  dataWrite("AT+CIPSHUT");
-  dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
-  dataWrite("AT+CIICR", 1000);
-  dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
-  Serial.println("SetupTCP Complete");
+  while(check == 0){
+    
+    dataWrite("AT+CREG?");
+    dataWrite("AT+CGREG?");
+    dataWrite("AT+CMEE=1");
+    dataWrite("AT+CGACT?");
+    dataWrite("AT+CIPSHUT");
+    dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
+    dataWrite("AT+CIICR", 1000);
+    dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
+
+    if(SIM900.available()){
+      // read the incoming address
+      Address = SIM900.read();
+    }
+      Serial.print("ReadString is: ");
+      Serial.println(Address);
+      if(Address == IP){
+        Serial.println("SetupTCP Complete");
+        check = 1; 
+        Serial.print("Check is: ");
+        Serial.println(check);
+    }
+  }
 }
 
 
