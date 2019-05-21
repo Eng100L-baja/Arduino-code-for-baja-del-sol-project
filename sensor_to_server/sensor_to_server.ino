@@ -16,9 +16,10 @@ String temp_sense;
 
 String pumpStatus;
 
+String inData = "";
 int check = 0;
-String Address;
-String IP = "10.59.8.243";
+String Address = "";
+String IP = "";
 
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
@@ -35,11 +36,23 @@ DallasTemperature Dallas(&Sajje);
 void dataWrite(String toSend, int tDelay = 500) {
   SIM900.println(toSend);
   delay(tDelay);
-  while (SIM900.available())
-    Serial.write(SIM900.read());
+
+  while (SIM900.available()){
+     inData = SIM900.readStringUntil('\n');
+     if(inData == "10.59.8.243\r"){
+        Serial.println("SetupTCP Complete");
+        check = 1; 
+        Serial.print("Check is: ");
+        Serial.println(check);
+    }
+     Serial.println(inData);
+  }
 }
 
 void setupTCP() {
+
+  IP = String("10.59.8.243");
+  
   while(check == 0){
     
     dataWrite("AT+CREG?");
@@ -50,24 +63,7 @@ void setupTCP() {
     dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
     dataWrite("AT+CIICR", 1000);
     dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
-
-    if(Serial.available()){
-      // read the incoming address
-      Address = Serial.read();
-    }
-    
-    if(SIM900.available()){
-      // read the incoming address
-      Address = SIM900.read();
-    }
-      Serial.print("ReadString is: ");
-      Serial.println(Address);
-      if(Address == IP){
-        Serial.println("SetupTCP Complete");
-        check = 1; 
-        Serial.print("Check is: ");
-        Serial.println(check);
-    }
+    delay(1000);
   }
 }
 
@@ -80,8 +76,27 @@ void sendData(String data) {
   dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + message + "\",\"t\":\"data\"}", 100);
   SIM900.write(0x1a);
   delay(1000);
-  while (SIM900.available())
-    Serial.write(SIM900.read());
+  while (SIM900.available()){
+     inData = SIM900.readStringUntil('\n');
+     delay(30);
+     
+     if(inData == "Error\r"){
+      check = 0;
+      while(check == 0){
+      
+        dataWrite("AT+CREG?");
+        dataWrite("AT+CGREG?");
+        dataWrite("AT+CMEE=1");
+        dataWrite("AT+CGACT?");
+        dataWrite("AT+CIPSHUT");
+        dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
+        dataWrite("AT+CIICR", 1000);
+        dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
+        delay(1000);
+        
+      }
+      }
+  }
 }
 
 //void getTime(){ 
