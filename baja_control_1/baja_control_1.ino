@@ -1,4 +1,4 @@
-// Include the libraries we need hello
+// Include the libraries we need
 #include <OneWire.h>
 #include <DallasTemperature.h>
 
