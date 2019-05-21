@@ -151,7 +151,7 @@ void loop() {
   Serial.print("Temperature for water outlet is: ");
   Serial.println(temp_out);
 
-  if (temp_out - temp_in > 0) {
+  if (temp_out - temp_in > 2) {
     Serial.println("turn on the pump.");
     Serial.println(" ");
     digitalWrite(relay_switch, HIGH);
