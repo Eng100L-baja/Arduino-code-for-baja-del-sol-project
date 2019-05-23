@@ -67,6 +67,9 @@ void loop() {
     inData = SIM900.readStringUntil('\n');
     delay(30);
     Serial.println("Received Message is: " + inData);
+    if(inData == "Mode 1\r"){
+      Serial.println("Mode Set to: Manual Pump Control");
+    }
   }
 }
 
