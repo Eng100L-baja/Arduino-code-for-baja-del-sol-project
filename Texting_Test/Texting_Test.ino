@@ -1,3 +1,5 @@
+// https://randomnerdtutorials.com/sim900-gsm-gprs-shield-arduino/
+
 #include <SoftwareSerial.h>
 
 String inData = "";
@@ -51,10 +53,16 @@ void setup() {
   delay(1000);   
   
   // Send the SMS
-  sendSMS();
+  sendSMS("Hello World!");
 }
 
 void loop() { 
+  if(Serial.available() >0){
+    inData = Serial.readStringUntil('\r');
+    Serial.println("Text to send is: " + inData);
+    sendSMS(inData);
+  }
+  
   while(SIM900.available() >0) {
     inData = SIM900.readStringUntil('\n');
     delay(30);
@@ -62,7 +70,7 @@ void loop() {
   }
 }
 
-void sendSMS() {
+void sendSMS(String inData) {
   // AT command to set SIM900 to SMS mode
   SIM900.print("AT+CMGF=1\r"); 
   delay(100);
@@ -73,7 +81,7 @@ void sendSMS() {
   delay(100);
   
   // REPLACE WITH YOUR OWN SMS MESSAGE CONTENT
-  dataWrite("Hello World!"); 
+  dataWrite(inData); 
   delay(100);
 
   // End AT command with a ^Z, ASCII code 26
@@ -81,5 +89,6 @@ void sendSMS() {
   delay(100);
   SIM900.println();
   // Give module time to send SMS
-  delay(5000); 
+  delay(5000);
+  inData = ""; 
 }
