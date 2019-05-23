@@ -5,6 +5,19 @@ String inData = "";
 // Configure software serial port
 SoftwareSerial SIM900(7, 8); 
 
+void dataWrite(String toSend, int tDelay = 500) {
+  SIM900.println(toSend);
+  delay(tDelay);
+
+  while (SIM900.available()){
+     inData = SIM900.readStringUntil('\n');
+     if(inData == "10.59.8.243\r"){
+        Serial.println("SetupTCP Complete");
+    }
+     Serial.println(inData);
+  }
+}
+
 void setupTCP() {
     
     dataWrite("AT+CREG?");
@@ -27,9 +40,15 @@ void setup() {
   delay(1000);
   setupTCP();
   delay(1000);  
+    // AT command to set SIM900 to SMS mode
+  SIM900.print("AT+CMGF=1\r"); 
+  delay(100);
+  // Set module to send SMS data to serial out upon receipt 
+  SIM900.print("AT+CNMI=2,2,0,0,0\r");
+  delay(100);
   
   // Give time to your GSM shield log on to network
-  delay(20000);   
+  delay(1000);   
   
   // Send the SMS
   sendSMS();
@@ -50,11 +69,11 @@ void sendSMS() {
 
   // REPLACE THE X's WITH THE RECIPIENT'S MOBILE NUMBER
   // USE INTERNATIONAL FORMAT CODE FOR MOBILE NUMBERS
-  SIM900.println("AT + CMGS = \"+016262154064\""); //"AT + CMGS = \"+XXXXXXXXXXXX\"" 
+  dataWrite("AT + CMGS = \"+16262154064\""); //"AT + CMGS = \"+XXXXXXXXXXXX\"" 
   delay(100);
   
   // REPLACE WITH YOUR OWN SMS MESSAGE CONTENT
-  SIM900.println("Hello World!"); 
+  dataWrite("Hello World!"); 
   delay(100);
 
   // End AT command with a ^Z, ASCII code 26
