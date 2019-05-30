@@ -22,8 +22,13 @@ String Address = "";
 String IP = "";
 
 int controlMode = 0;
+String control;
 
-unsigned long time;
+unsigned long currentTime;
+unsigned long startTime;
+const unsigned long period = 60000; 
+
+int dataCheck = 0;
 
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
@@ -36,6 +41,62 @@ OneWire Sajje(temp_sensors);
 // and provide the "Sajje" devices reference to Dallas
 // The & symbol in a C++ variable declaration means it's a reference. https://en.wikipedia.org/wiki/Reference_%28C%2B%2B%29
 DallasTemperature Dallas(&Sajje);
+
+void controlmodeCheck() {
+  if(controlMode == 0){
+    if (temp_out - temp_in > 2) {
+      Serial.println("turn on the pump.");
+      Serial.println(" ");
+      digitalWrite(relay_switch, HIGH);
+      pumpStatus = "ON";
+    }
+    else {
+      Serial.println("turn off the pump.");
+      digitalWrite(relay_switch, LOW);
+      Serial.println(" ");
+      pumpStatus = "OFF";
+    }
+  }
+
+  if(controlMode == 1){
+    if(pumpStatus == "ON"){
+      digitalWrite(relay_switch, HIGH);
+      Serial.println(" ");
+    }
+    if(pumpStatus == "OFF"){
+      digitalWrite(relay_switch, LOW);
+      Serial.println(" ");
+    }  
+  }
+}
+void checkSMS() {
+  if(inData == "Mode 1\r" || inData == "mode 1\r"){
+    Serial.println("Mode Set to: Manual Pump Control");
+    controlMode = 1;
+    control = "Manual";
+    sendSMS("Mode Set to: Manual Pump Control");
+  }
+  if(inData == "Mode 0\r" || inData == "mode 0\r"){
+    Serial.println("Mode Set to: Automated Pump Control");
+    controlMode = 0;
+    control = "Auto";
+    sendSMS("Mode Set to: Automated Pump Control");
+  }
+  if(inData == "Pump On\r" || inData == "pump on\r" || inData == "Pump on\r"){
+    Serial.println("Pump Status: ON");
+    pumpStatus = "ON";
+    sendSMS("Pump Status: ON");
+  }  
+  if(inData == "Pump Off\r" || inData == "pump off\r" || inData == "Pump off\r"){
+    Serial.println("Pump Status: OFF");
+    pumpStatus = "OFF";
+    sendSMS("Pump Status: OFF");
+  } 
+  if(inData == "Status\r" || inData == "status\r"){
+    Serial.print(temp_sense);
+    sendSMS(temp_sense);
+  }
+}
 
 void dataWrite(String toSend, int tDelay = 500) {
   SIM900.println(toSend);
@@ -96,44 +157,26 @@ void sendSMS(String inData) {
 }
 
 void sendData(String data) {
-  String message;
-  message = data;
-  dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"", 5000);
-  dataWrite("AT+CIPSEND", 100);
-  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + message + "\",\"t\":\"data\"}", 100);
-  SIM900.write(0x1a);
-  delay(1000);
-  while (SIM900.available()){
-     inData = SIM900.readStringUntil('\n');
-     delay(30);
-     
-     if(inData == "Error\r"){
-      check = 0;
-      while(check == 0){
-      
-        dataWrite("AT+CREG?");
-        dataWrite("AT+CGREG?");
-        dataWrite("AT+CMEE=1");
-        dataWrite("AT+CGACT?");
-        dataWrite("AT+CIPSHUT");
-        dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
-        dataWrite("AT+CIICR", 1000);
-        dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
-        delay(1000);
-        
-      }
-      }
+  while( dataCheck == 0){
+  
+    dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"",5000);
+    dataWrite("AT+CIPSEND",100);
+    dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + String(data) + "\",\"t\":\"data\"}",100);
+    SIM900.write(0x1a);
+    delay(1000);
+    while (SIM900.available()){
+       inData = SIM900.readStringUntil('\n');
+       delay(1000);
+       
+       if(inData == "SEND OK\r"){
+          dataCheck = 1;
+        }
+    }
+
+    dataCheck = 0;
   }
 }
 
-//void getTime(){ 
-//  dataWrite("AT+HTTPINIT");
-//  dataWrite("AT+HTTPPARA="CID",1");
-//  dataWrite("AT+HTTPPARA="URL","http://worldtimeapi.org/api/timezone/America/Los_Angeles");
-//  dataWrite("AT+HTTPACTION=0");
-//  dataWrite("AT+HTTPREAD");
-//  
-//}
 
 void setup() {
   SIM900.begin(19200);
@@ -159,9 +202,10 @@ void setup() {
   // setup the pin for pump
   pinMode(relay_switch, OUTPUT);
 
-  sendSMS("Hello World!");
-  time = millis();
+  sendSMS("Baja Solar Water Heater has been initialized!");
+  startTime = millis();
   controlMode = 0;
+  control = "Auto";
 }
 
 void loop() {
@@ -189,61 +233,28 @@ void loop() {
   Serial.println(temp_in);
   Serial.print("Temperature for water outlet is: ");
   Serial.println(temp_out);
+  Serial.println("Total Time: " + currentTime);
 
   while(SIM900.available() >0) {
     inData = SIM900.readStringUntil('\n');
     delay(30);
     Serial.println("Received Message is: " + inData);
-    if(inData == "Mode 1\r"){
-      Serial.println("Mode Set to: Manual Pump Control");
-      controlMode = 1;
-      sendSMS("Mode Set to: Manual Pump Control");
-    }
-    if(inData == "Mode 0\r"){
-      Serial.println("Mode Set to: Automated Pump Control");
-      controlMode = 0;
-      sendSMS("Mode Set to: Automated Pump Control");
-    }
-    if(inData == "Pump On\r" || inData == "pump on\r" || inData == "Pump on\r"){
-      Serial.println("Pump Status: ON");
-      pumpStatus = "ON";
-    }  
-    if(inData == "Pump Off\r" || inData == "pump off\r" || inData == "Pump off\r"){
-      Serial.println("Pump Status: OFF");
-      pumpStatus = "OFF";
-    }             
+    checkSMS();            
   }  
-  if(controlMode == 0){
-    if (temp_out - temp_in > 2) {
-      Serial.println("turn on the pump.");
-      Serial.println(" ");
-      digitalWrite(relay_switch, HIGH);
-      pumpStatus = "ON";
-    }
-    else {
-      Serial.println("turn off the pump.");
-      digitalWrite(relay_switch, LOW);
-      Serial.println(" ");
-      pumpStatus = "OFF";
-    }
-  }
 
-  if(controlMode == 1){
-    if(pumpStatus == "ON"){
-      digitalWrite(relay_switch, HIGH);
-    }
-    if(pumpStatus == "OFF"){
-      digitalWrite(relay_switch, LOW);
-    }
-  }
+  controlmodeCheck();
+  currentTime = millis();
+  
+  
   
   t_in = String(temp_in);
   t_out = String(temp_out);
-  temp_sense = "Inlet Temp: " + t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
-  if( (time % 10000) == 0){
+  temp_sense = "Control Mode: " + control + " / " + "Inlet Temp: " + t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
+ // if( currentTime - startTime >= period){
     sendData(temp_sense);
     Serial.println(temp_sense);
-  }
+    delay(10000);
+ // }
 
 
 }

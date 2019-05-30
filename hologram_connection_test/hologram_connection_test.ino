@@ -1,6 +1,10 @@
 #include <SoftwareSerial.h>
 SoftwareSerial GPRS(7, 8); // RX, TX
 
+unsigned long currentTime;
+unsigned long startTime;
+const unsigned long period = 10000; 
+
 void dataWrite(String toSend, int tDelay = 500){
   GPRS.println(toSend);
   delay(tDelay);
@@ -35,14 +39,18 @@ void setup() {
   GPRS.begin(19200);
   Serial.begin(19200);
   delay(500);
+  startTime = millis();
   setupTCP();
 //  sendData(105);
 //  Serial.write("LETS GO");
 }
 
 void loop() {
-  sendData(9000);
-  delay(10000);
+  currentTime = millis();
+  if( currentTime - startTime >= period){
+    sendData(9000);
+  }
+
 //  while(GPRS.available()) 
 //    Serial.write(GPRS.read());
 //  while (Serial.available()) {
