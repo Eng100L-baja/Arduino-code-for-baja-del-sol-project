@@ -250,11 +250,11 @@ void loop() {
   t_in = String(temp_in);
   t_out = String(temp_out);
   temp_sense = "Control Mode: " + control + " / " + "Inlet Temp: " + t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
- // if( currentTime - startTime >= period){
+  if( currentTime - startTime >= period){
     sendData(temp_sense);
+    sendSMS("Data Sent");
     Serial.println(temp_sense);
-    delay(10000);
- // }
+  }
 
 
 }
