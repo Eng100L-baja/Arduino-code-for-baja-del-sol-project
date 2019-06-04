@@ -21,6 +21,10 @@ int check = 0;
 String Address = "";
 String IP = "";
 
+unsigned long currentTime;
+unsigned long startTime;
+const unsigned long period = 10000; 
+
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 // call the library oneWire, provide a name to your Onewire devices (we called them "Sajjie")
@@ -124,11 +128,18 @@ void setup() {
 
   // setup the pin for pump
   pinMode(relay_switch, OUTPUT);
+
+  startTime = millis();
 }
 
 void loop() {
+
+  currentTime = millis();
+  
   // call sensors.requestTemperatures() to issue a global temperature
   // request to all devices on the bus
+  if( currentTime - startTime >= period){
+  
   Serial.print("Requesting temperatures...");
 
   // Send the command to get temperatures using Dallas Library (same as printing "Done" using the "Serial" library)
@@ -181,4 +192,5 @@ void loop() {
   //      SIM900.write(Serial.read());
   //  }
 
+}
 }
