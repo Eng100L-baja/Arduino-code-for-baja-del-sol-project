@@ -26,7 +26,7 @@ String control;
 
 unsigned long currentTime;
 unsigned long startTime;
-const unsigned long period = 60000; 
+const unsigned long period = 5000; 
 
 int dataCheck = 0;
 
@@ -85,12 +85,22 @@ void checkSMS() {
   if(inData == "Pump On\r" || inData == "pump on\r" || inData == "Pump on\r"){
     Serial.println("Pump Status: ON");
     pumpStatus = "ON";
-    sendSMS("Pump Status: ON");
+    if(controlMode == 1){
+      sendSMS("Pump Status: ON");
+    }
+    else{
+      sendSMS("Mode Set is not Manual Control");
+    }
   }  
   if(inData == "Pump Off\r" || inData == "pump off\r" || inData == "Pump off\r"){
     Serial.println("Pump Status: OFF");
     pumpStatus = "OFF";
-    sendSMS("Pump Status: OFF");
+    if(controlMode == 1){
+      sendSMS("Pump Status: OFF");
+    }
+    else{
+      sendSMS("Mode Set is not Manual Control");
+    }    
   } 
   if(inData == "Status\r" || inData == "status\r"){
     Serial.print(temp_sense);
@@ -157,7 +167,6 @@ void sendSMS(String inData) {
 }
 
 void sendData(String data) {
-  while( dataCheck == 0){
   
     dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"",5000);
     dataWrite("AT+CIPSEND",100);
@@ -167,16 +176,8 @@ void sendData(String data) {
     while (SIM900.available()){
        inData = SIM900.readStringUntil('\n');
        delay(1000);
-       
-       if(inData == "SEND OK\r"){
-          dataCheck = 1;
-        }
-    }
-
-    dataCheck = 0;
   }
 }
-
 
 void setup() {
   SIM900.begin(19200);
@@ -195,10 +196,6 @@ void setup() {
   //  sendData(105);
   //  Serial.write("LETS GO");
 
-  // Start up the Dallas library
-  Dallas.begin();
-  Serial.println("Dallas Temperature Begin");
-
   // setup the pin for pump
   pinMode(relay_switch, OUTPUT);
 
@@ -209,37 +206,13 @@ void setup() {
 }
 
 void loop() {
-  // call sensors.requestTemperatures() to issue a global temperature
-  // request to all devices on the bus
-  
-  Serial.print("Requesting temperatures...");
 
-  // Send the command to get temperatures using Dallas Library (same as printing "Done" using the "Serial" library)
-  Dallas.requestTemperatures();
-  Serial.println("DONE");
-  // We use the function ByIndex
-  temp_in = Dallas.getTempCByIndex(0);
-  temp_out = Dallas.getTempCByIndex(1);
-//  Serial.print("temp_in: ");
-//  Serial.print(temp_in);
-//  Serial.print("/ temp_out: ");
-//  Serial.println(temp_out);
-
-  temp_in = (temp_in * (1.8)) + 32; //converts Celsius to Fahrenheit
-  temp_out = (temp_out * (1.8)) + 32;
-
-  // After we got the temperatures, we can print them here.
-  Serial.print("Temperature for water inlet is: ");
-  Serial.println(temp_in);
-  Serial.print("Temperature for water outlet is: ");
-  Serial.println(temp_out);
-  Serial.println("Total Time: " + currentTime);
-
-  while(SIM900.available() >0) {
+  while(SIM900.available() > 0) {
     inData = SIM900.readStringUntil('\n');
     delay(30);
     Serial.println("Received Message is: " + inData);
-    checkSMS();            
+    checkSMS();    
+    //controlmodeCheck();        
   }  
 
   controlmodeCheck();
@@ -250,11 +223,7 @@ void loop() {
   t_in = String(temp_in);
   t_out = String(temp_out);
   temp_sense = "Control Mode: " + control + " / " + "Inlet Temp: " + t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
- // if( currentTime - startTime >= period){
-    sendData(temp_sense);
-    Serial.println(temp_sense);
-    delay(10000);
- // }
+
 
 
 }
