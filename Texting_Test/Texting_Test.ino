@@ -80,7 +80,8 @@ void sendSMS(String inData) {
 
   // REPLACE THE X's WITH THE RECIPIENT'S MOBILE NUMBER
   // USE INTERNATIONAL FORMAT CODE FOR MOBILE NUMBERS
-  dataWrite("AT + CMGS = \"+16262154064\""); //"AT + CMGS = \"+XXXXXXXXXXXX\"" 
+  // +1 is US code not +01
+  dataWrite("AT + CMGS = \"+1XXXXXXXXXX\""); //"AT + CMGS = \"+XXXXXXXXXXXX\"" 
   delay(100);
   
   // REPLACE WITH YOUR OWN SMS MESSAGE CONTENT

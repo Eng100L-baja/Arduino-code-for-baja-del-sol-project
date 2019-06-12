@@ -43,6 +43,8 @@ void dataWrite(String toSend, int tDelay = 500) {
 
   while (SIM900.available()){
      inData = SIM900.readStringUntil('\n');
+
+     //Checks if the connection is made. If the connection is made, the IP is sent back to the Arduino as confirmation 
      if(inData == "10.59.8.243\r"){
         Serial.println("SetupTCP Complete");
         check = 1; 
@@ -102,15 +104,6 @@ void sendData(String data) {
       }
   }
 }
-
-//void getTime(){ 
-//  dataWrite("AT+HTTPINIT");
-//  dataWrite("AT+HTTPPARA="CID",1");
-//  dataWrite("AT+HTTPPARA="URL","http://worldtimeapi.org/api/timezone/America/Los_Angeles");
-//  dataWrite("AT+HTTPACTION=0");
-//  dataWrite("AT+HTTPREAD");
-//  
-//}
 
 void setup() {
   SIM900.begin(19200);
@@ -180,6 +173,7 @@ void loop() {
   Serial.println(temp_sense);
   sendData(temp_sense);
   delay(5000);
+  //Delays 5 seconds so data doesn't keep sending so fast
 
   //  while(SIM900.available())
   //    Serial.write(SIM900.read());
