@@ -150,7 +150,8 @@ void sendSMS(String inData) {
 
   // REPLACE THE X's WITH THE RECIPIENT'S MOBILE NUMBER
   // USE INTERNATIONAL FORMAT CODE FOR MOBILE NUMBERS
-  dataWrite("AT + CMGS = \"+16262154064\""); //"AT + CMGS = \"+XXXXXXXXXXXX\"" 
+  // +1 is US code not +01
+  dataWrite("AT + CMGS = \"+1XXXXXXXXXX\""); //"AT + CMGS = \"+XXXXXXXXXXXX\"" 
   delay(100);
   
   // REPLACE WITH YOUR OWN SMS MESSAGE CONTENT
@@ -192,9 +193,7 @@ void setup() {
   // Set module to send SMS data to serial out upon receipt 
   SIM900.print("AT+CNMI=2,2,0,0,0\r");
   delay(100);
-  
-  //  sendData(105);
-  //  Serial.write("LETS GO");
+  //These commands initialize the GSM for texting
 
   // setup the pin for pump
   pinMode(relay_switch, OUTPUT);
