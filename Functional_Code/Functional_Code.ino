@@ -171,8 +171,8 @@ void loop() {
     Serial.println(" ");
     pumpStatus = "OFF";
   }
-  t_in = String(temp_in);
-  t_out = String(temp_out);
+  t_in = String(temp_in);  // t_in represents the temp shown, takes the value of temp_in which is the actual temp
+  t_out = String(temp_out); // t_out represents the temp show, takes the value of temp)out which is the actual temp
   temp_sense = "Inlet Temp: " + t_in + " / " + "Outlet Temp: " + t_out + " / " + "Pump Status: " + pumpStatus;
   Serial.println(temp_sense);
   sendData(temp_sense);
