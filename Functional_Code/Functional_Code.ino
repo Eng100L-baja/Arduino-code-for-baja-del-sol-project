@@ -10,19 +10,19 @@ SoftwareSerial SIM900(7, 8); // RX, TX
 float temp_in;
 float temp_out;
 
-String t_in;
-String t_out;
+String t_in;  // represents data shown which takes value of temp_in
+String t_out; // represents data shown which takes value of temp_out
 String temp_sense;
 
 String pumpStatus;
 
 String inData = "";
-int check = 0;
-String Address = "";
+int check = 0;  // check revises if connection made(0=NO,1=YES)
+String Address = ""; 
 String IP = "";
 
-unsigned long currentTime;
-unsigned long startTime;
+unsigned long currentTime; // ensures currentTime isn’t neg. which cant happen
+unsigned long startTime;  // ensures startTime isn’t negative
 const unsigned long period = 10000; 
 
 
@@ -60,15 +60,17 @@ void setupTCP() {
   IP = String("10.59.8.243");
   
   while(check == 0){
-    
-    dataWrite("AT+CREG?");
-    dataWrite("AT+CGREG?");
+  
+    // if connection isn’t made
+  
+    dataWrite("AT+CREG?");                   // Network registration
+    dataWrite("AT+CGREG?");                  // Checks GPRS network registration status
     dataWrite("AT+CMEE=1");
-    dataWrite("AT+CGACT?");
-    dataWrite("AT+CIPSHUT");
-    dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
-    dataWrite("AT+CIICR", 1000);
-    dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
+    dataWrite("AT+CGACT?");                  // Activate Programmed Data Processor
+    dataWrite("AT+CIPSHUT");                 // Deactivate GPRS PDP Context
+    dataWrite("AT+CSTT=\"hologram\"");       //Set the APN to hologram
+    dataWrite("AT+CIICR", 1000);             // Bring up wireless connection
+    dataWrite("AT+CIFSR", 1000);             //Get IP address
     delay(1000);
   }
 }
@@ -77,27 +79,29 @@ void setupTCP() {
 void sendData(String data) {
   String message;
   message = data;
-  dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"", 5000);
+  dataWrite("AT+CIPSTART=\"TCP\",\"cloudsocket.hologram.io\",\"9999\"", 5000);  // start up TCP connection
   dataWrite("AT+CIPSEND", 100);
-  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + message + "\",\"t\":\"data\"}", 100);
+  dataWrite("{\"k\":\"nEPN%q2_\",\"d\":\"" + message + "\",\"t\":\"data\"}", 100);  // Send data through TCP connection
   SIM900.write(0x1a);
   delay(1000);
   while (SIM900.available()){
      inData = SIM900.readStringUntil('\n');
      delay(30);
      
+     // if data sent illustrates an error, check connection
      if(inData == "Error\r"){
       check = 0;
-      while(check == 0){
+       // if connection is not made...
+       while(check == 0){
       
-        dataWrite("AT+CREG?");
-        dataWrite("AT+CGREG?");
+        dataWrite("AT+CREG?");        // Network registration
+        dataWrite("AT+CGREG?");       // GPRS network registration status
         dataWrite("AT+CMEE=1");
-        dataWrite("AT+CGACT?");
-        dataWrite("AT+CIPSHUT");
+        dataWrite("AT+CGACT?");       // Activate PDP
+        dataWrite("AT+CIPSHUT");      // Deactivate PDP
         dataWrite("AT+CSTT=\"hologram\"");      //Set the APN to hologram
-        dataWrite("AT+CIICR", 1000);
-        dataWrite("AT+CIFSR", 1000);            //Get confirmation of the IP address
+        dataWrite("AT+CIICR", 1000);            // Bring up wireless connection
+        dataWrite("AT+CIFSR", 1000);            //Get IP address
         delay(1000);
         
       }
@@ -110,7 +114,7 @@ void setup() {
   delay(2000);
   Serial.begin(19200);
   delay(2000);
-  setupTCP();
+  setupTCP();      // set up Transmission Control Protocol
   delay(1000);
   //  sendData(105);
   //  Serial.write("LETS GO");
@@ -154,7 +158,7 @@ void loop() {
   Serial.println(temp_in);
   Serial.print("Temperature for water outlet is: ");
   Serial.println(temp_out);
-
+  // Control logic for turning on or off pump based on temp
   if (temp_out - temp_in > 2) {
     Serial.println("turn on the pump.");
     Serial.println(" ");
